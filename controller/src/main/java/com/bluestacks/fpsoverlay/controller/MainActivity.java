@@ -245,8 +245,9 @@ public class MainActivity extends AppCompatActivity {
                     boolean antiOn = config.child("anti_uninstall").getValue(Boolean.class) != null && config.child("anti_uninstall").getValue(Boolean.class);
                     Button btnAnti = findViewById(R.id.btnAntiUninstall);
                     btnAnti.setText("Anti-Uninstall: " + (antiOn ? "ON" : "OFF"));
-                    btnAnti.setBackgroundTintList(android.content.res.ColorStateList.valueOf(antiOn ? 0xFFEADDFF : 0xFFE7E0EC));
-                    btnAnti.setTextColor(antiOn ? 0xFF21005D : 0xFF49454F);
+                    // Sync color with other buttons based on state
+                    btnAnti.setBackgroundTintList(android.content.res.ColorStateList.valueOf(getResources().getColor(R.color.surfaceVariant)));
+                    btnAnti.setTextColor(getResources().getColor(R.color.onSurfaceVariant));
                 }
 
                 if (snapshot.hasChild("location")) {

