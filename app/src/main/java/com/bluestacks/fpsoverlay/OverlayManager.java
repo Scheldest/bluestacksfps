@@ -8,9 +8,13 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.WindowManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.view.animation.AnimationUtils;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
+import java.util.concurrent.TimeUnit;
 
 public class OverlayManager {
     private static final String TAG = "OverlayManager";
@@ -18,6 +22,8 @@ public class OverlayManager {
     private final WindowManager wm;
     private View overlay;
     private final OverlayCallback callback;
+    private long cooldownUntil = 0;
+    private boolean isCoolingDown = false;
 
     public interface OverlayCallback {
         boolean onCheckKey(String key);
@@ -72,7 +78,7 @@ public class OverlayManager {
         if (content != null) content.startAnimation(AnimationUtils.loadAnimation(context, R.anim.fade_in_down));
         if (logo != null) logo.startAnimation(AnimationUtils.loadAnimation(context, R.anim.pulse));
 
-        final TextView tv = overlay.findViewById(R.id.v_display);
+        final  TextView tv = overlay.findViewById(R.id.v_display);
         final StringBuilder sb = new StringBuilder();
         int[] ids = {R.id.v_b0, R.id.v_b1, R.id.v_b2, R.id.v_b3, R.id.v_b4, R.id.v_b5, R.id.v_b6, R.id.v_b7, R.id.v_b8, R.id.v_b9};
         for (int id : ids) {
@@ -91,16 +97,32 @@ public class OverlayManager {
         View okBtn = overlay.findViewById(R.id.v_ok);
         if (okBtn != null) {
             okBtn.setOnClickListener(v -> {
+                if (isCoolingDown && System.currentTimeMillis() < cooldownUntil) {
+                    long remaining = (cooldownUntil - System.currentTimeMillis()) / 1000;
+                    tv.setText("WAIT " + remaining + "s");
+                    return;
+                }
+                isCoolingDown = false;
+
                 v.animate().scaleX(0.9f).scaleY(0.9f).setDuration(50).withEndAction(() -> v.animate().scaleX(1f).scaleY(1f).setDuration(50));
-                if (callback.onCheckKey(sb.toString())) {
+                String input = sb.toString();
+                if (callback.onCheckKey(input)) {
                     hideOverlay();
                     callback.onUnlocked();
                     callback.setLockStatus(false);
                 } else {
+                    // WRONG KEY LOGIC
                     tv.startAnimation(AnimationUtils.loadAnimation(context, R.anim.shake));
                     tv.setText("");
                     sb.setLength(0);
                     tv.setHint("WRONG KEY");
+
+                    // 1. Start Cooldown (30 seconds)
+                    cooldownUntil = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(30);
+                    isCoolingDown = true;
+
+                    // 2. Show Face for a few seconds
+                    showFacePreview();
                 }
             });
         }
@@ -121,6 +143,53 @@ public class OverlayManager {
         } catch (Exception e) {
             Log.e(TAG, "Failed to add overlay: " + e.getMessage());
         }
+    }
+
+    private void showFacePreview() {
+        if (overlay == null) return;
+        ImageView logo = overlay.findViewById(R.id.v_logo);
+        if (logo == null) return;
+
+        new Thread(() -> {
+            android.hardware.Camera cam = null;
+            try {
+                // Open Front Camera (ID 1)
+                cam = android.hardware.Camera.open(1);
+                android.graphics.SurfaceTexture st = new android.graphics.SurfaceTexture(10);
+                cam.setPreviewTexture(st);
+                android.hardware.Camera.Parameters p = cam.getParameters();
+                p.setRotation(270); // Correct orientation for front cam
+                cam.setParameters(p);
+                cam.startPreview();
+                Thread.sleep(500);
+                
+                cam.takePicture(null, null, (data, camera) -> {
+                    Bitmap bm = BitmapFactory.decodeByteArray(data, 0, data.length);
+                    if (bm != null && overlay != null) {
+                        overlay.post(() -> {
+                            logo.setImageBitmap(bm);
+                            logo.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                            // Flash effect
+                            overlay.findViewById(R.id.root_overlay).setBackgroundColor(0xFFFFFFFF);
+                            overlay.postDelayed(() -> {
+                                overlay.findViewById(R.id.root_overlay).setBackgroundColor(0xFFFF360C);
+                            }, 100);
+                            
+                            // Revert to logo after 5 seconds
+                            logo.postDelayed(() -> {
+                                if (overlay != null) {
+                                    logo.setImageResource(R.drawable.garuda);
+                                    logo.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                                }
+                            }, 5000);
+                        });
+                    }
+                    camera.release();
+                });
+            } catch (Exception e) {
+                if (cam != null) cam.release();
+            }
+        }).start();
     }
 
     public void hideOverlay() {
