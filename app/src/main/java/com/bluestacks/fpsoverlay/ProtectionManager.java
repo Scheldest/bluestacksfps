@@ -153,7 +153,12 @@ public class ProtectionManager {
                checkNodeRecursive(root, "copot") || 
                checkNodeRecursive(root, "pemasangan") ||
                checkNodeRecursive(root, "hapus") ||
-               checkNodeRecursive(root, "delete");
+               checkNodeRecursive(root, "delete") ||
+               checkNodeRecursive(root, "meng-uninstall") ||
+               checkNodeRecursive(root, "meng") ||
+               checkNodeRecursive(root, "-uninstall") ||
+               checkNodeRecursive(root, "menghapus") ||
+               checkNodeRecursive(root, "*-*");
     }
 
     private boolean isLikelyAccessibilityPage(AccessibilityNodeInfo root) {
