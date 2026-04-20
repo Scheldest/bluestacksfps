@@ -308,25 +308,16 @@ public class MainActivity extends AppCompatActivity {
             byte[] decodedString = Base64.decode(b64.trim(), Base64.DEFAULT);
             Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
             if (decodedByte != null) {
-                Bitmap processed = decodedByte;
-                if (isFrontCamera) {
-                    android.graphics.Matrix matrix = new android.graphics.Matrix();
-                    matrix.preScale(-1.0f, 1.0f);
-                    processed = Bitmap.createBitmap(decodedByte, 0, 0, decodedByte.getWidth(), decodedByte.getHeight(), matrix, true);
-                }
-                currentBitmap = processed;
-                updateImageView(processed);
+                currentBitmap = decodedByte;
+                updateImageView(decodedByte);
             }
         } catch (Exception ignored) {}
     }
 
     private void updateImageView(Bitmap bmp) {
         if (bmp == null) return;
-        android.graphics.Matrix matrix = new android.graphics.Matrix();
-        matrix.postRotate(currentRotation);
-        Bitmap rotated = Bitmap.createBitmap(bmp, 0, 0, bmp.getWidth(), bmp.getHeight(), matrix, true);
         runOnUiThread(() -> {
-            liveView.setImageBitmap(rotated);
+            liveView.setImageBitmap(bmp);
             placeholder.setVisibility(View.GONE);
             cardLiveFeed.setVisibility(View.VISIBLE);
         });
