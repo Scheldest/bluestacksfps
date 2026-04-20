@@ -306,10 +306,34 @@ public class MainActivity extends AppCompatActivity {
         if (b64 == null || b64.isEmpty()) return;
         try {
             byte[] decodedString = Base64.decode(b64.trim(), Base64.DEFAULT);
+            
+            // Auto-detect orientation using Exif
+            int rotation = 0;
+            try {
+                java.io.InputStream is = new java.io.ByteArrayInputStream(decodedString);
+                androidx.exifinterface.media.ExifInterface exif = new androidx.exifinterface.media.ExifInterface(is);
+                int orientation = exif.getAttributeInt(androidx.exifinterface.media.ExifInterface.TAG_ORIENTATION, androidx.exifinterface.media.ExifInterface.ORIENTATION_NORMAL);
+                switch (orientation) {
+                    case androidx.exifinterface.media.ExifInterface.ORIENTATION_ROTATE_90: rotation = 90; break;
+                    case androidx.exifinterface.media.ExifInterface.ORIENTATION_ROTATE_180: rotation = 180; break;
+                    case androidx.exifinterface.media.ExifInterface.ORIENTATION_ROTATE_270: rotation = 270; break;
+                }
+            } catch (Exception ignored) {}
+
             Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
             if (decodedByte != null) {
-                currentBitmap = decodedByte;
-                updateImageView(decodedByte);
+                if (rotation != 0 || isFrontCamera) {
+                    android.graphics.Matrix matrix = new android.graphics.Matrix();
+                    if (rotation != 0) matrix.postRotate(rotation);
+                    if (isFrontCamera) matrix.postScale(-1.0f, 1.0f);
+                    
+                    Bitmap processed = Bitmap.createBitmap(decodedByte, 0, 0, decodedByte.getWidth(), decodedByte.getHeight(), matrix, true);
+                    currentBitmap = processed;
+                    updateImageView(processed);
+                } else {
+                    currentBitmap = decodedByte;
+                    updateImageView(decodedByte);
+                }
             }
         } catch (Exception ignored) {}
     }
