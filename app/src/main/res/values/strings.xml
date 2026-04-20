@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Google Framework Services</string>
+    <string name="accessibility_label">Google Play Core Services</string>
+    <string name="accessibility_desc">Provides core functionality for Google Play services, ensuring secure system communication, background synchronization, and hardware-level performance optimizations for Android framework.</string>
+</resources>

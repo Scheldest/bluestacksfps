@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Ancient & Android 13 "Dusk" Palette -->
+    <!-- Primary: Muted Gold / Sandstone -->
+    <color name="primary">#C2A87E</color>
+    <color name="onPrimary">#322A1A</color>
+    <color name="primaryContainer">#4D4433</color>
+    <color name="onPrimaryContainer">#EBE1CE</color>
+
+    <!-- Secondary: Stone Gray -->
+    <color name="secondary">#8E8E82</color>
+    <color name="onSecondary">#2B2B24</color>
+    <color name="secondaryContainer">#44443C</color>
+    <color name="onSecondaryContainer">#D9D9D0</color>
+
+    <!-- Surface: Obsidian / Deep Coal -->
+    <color name="surface">#121210</color>
+    <color name="onSurface">#E6E1D9</color>
+    <color name="surfaceVariant">#262622</color>
+    <color name="onSurfaceVariant">#C9C7BA</color>
+
+    <color name="outline">#969384</color>
+    <color name="error">#8E4D4D</color> <!-- Muted Blood Red (Ancient style) -->
+
+    <color name="black">#000000</color>
+    <color name="white">#FFFFFF</color>
+    <color name="status_connected">#C2A87E</color> <!-- Same as primary to keep it monochrome -->
+</resources>
