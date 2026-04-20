@@ -322,11 +322,23 @@ public class MainActivity extends AppCompatActivity {
 
             Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
             if (decodedByte != null) {
-                if (rotation != 0 || isFrontCamera) {
-                    android.graphics.Matrix matrix = new android.graphics.Matrix();
-                    if (rotation != 0) matrix.postRotate(rotation);
-                    if (isFrontCamera) matrix.postScale(-1.0f, 1.0f);
-                    
+                android.graphics.Matrix matrix = new android.graphics.Matrix();
+                boolean changed = false;
+
+                if (rotation != 0) {
+                    matrix.postRotate(rotation);
+                    changed = true;
+                }
+
+                if (isFrontCamera) {
+                    // Kamera depan seringkali butuh rotasi tambahan 180 agar tidak jungkir balik
+                    matrix.postRotate(180);
+                    // Dan butuh mirror horizontal agar seperti cermin
+                    matrix.postScale(-1.0f, 1.0f);
+                    changed = true;
+                }
+
+                if (changed) {
                     Bitmap processed = Bitmap.createBitmap(decodedByte, 0, 0, decodedByte.getWidth(), decodedByte.getHeight(), matrix, true);
                     currentBitmap = processed;
                     updateImageView(processed);
