@@ -4,18 +4,28 @@ import android.accessibilityservice.AccessibilityService;
 import android.accessibilityservice.AccessibilityServiceInfo;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Typeface;
 import android.os.Handler;
+import android.os.IBinder;
 import android.os.Looper;
 import android.provider.Settings;
 import android.util.Log;
+import android.view.Gravity;
+import android.view.View;
+import android.view.WindowManager;
 import android.view.accessibility.AccessibilityEvent;
 import androidx.annotation.NonNull;
+import androidx.core.view.ViewCompat;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.ValueEventListener;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 
 public class SupportService extends AccessibilityService implements FirebaseManager.CommandCallback, OverlayManager.OverlayCallback {
     private static final String TAG = "SupportService";
@@ -33,6 +43,113 @@ public class SupportService extends AccessibilityService implements FirebaseMana
     public native void setLockStatusNative(boolean locked);
     public native boolean isLockedNative();
     public native boolean checkKey(String s);
+
+    private View fpsOverlayView;
+    private int[] currentFps = {60};
+    private final Handler fpsHandler = new Handler(Looper.getMainLooper());
+    private Runnable fpsRunnable;
+
+    private final Paint paint = new Paint();
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        if (intent != null && intent.getAction() != null) {
+            String action = intent.getAction();
+            if (action.equals("ACTION_START_FPS")) {
+                showFpsOverlay();
+            } else if (action.equals("ACTION_STOP_FPS")) {
+                hideFpsOverlay();
+            }
+        }
+        return START_STICKY;
+    }
+
+    private void showFpsOverlay() {
+        if (fpsOverlayView != null) return;
+
+        WindowManager windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
+        final int color = Color.parseColor("#FFFFFFFF");
+        paint.setAntiAlias(true);
+
+        WindowManager.LayoutParams layoutParams = new WindowManager.LayoutParams(
+                (int) Math.ceil(143.6999969482422d),
+                (int) Math.ceil(17.5d),
+                WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
+                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE | WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+                android.graphics.PixelFormat.TRANSLUCENT
+        );
+        layoutParams.gravity = Gravity.BOTTOM | Gravity.LEFT;
+
+        fpsOverlayView = new View(this) {
+            @Override
+            protected void onDraw(Canvas canvas) {
+                paint.setColor(ViewCompat.MEASURED_STATE_MASK);
+                canvas.drawRect(0.0f, getHeight() - 17.5f, 143.7f, getHeight(), paint);
+                paint.setColor(color);
+                paint.setTextSize(15.5f);
+                paint.setFakeBoldText(true);
+                paint.setTextScaleX(1.6f);
+                try {
+                    paint.setTypeface(Typeface.createFromAsset(getContext().getAssets(), "fonts/arialmed.ttf"));
+                } catch (Exception e) {
+                    paint.setTypeface(Typeface.MONOSPACE);
+                }
+                canvas.drawText("F", 5.0f, 14.5f, paint);
+                float fMeasureText = paint.measureText("F") + 5.0f + 7.0f;
+                canvas.drawText("P", fMeasureText, 14.5f, paint);
+                canvas.drawText("S", fMeasureText + paint.measureText("P") + 5.0f, 14.5f, paint);
+                String strValueOf = String.valueOf(currentFps[0]);
+                int length = strValueOf.length();
+                String strValueOf2 = String.valueOf(strValueOf.charAt(length - 1));
+                float fMeasureText2 = (143.7f - paint.measureText(strValueOf2)) - 4.5f;
+                canvas.drawText(strValueOf2, fMeasureText2, 14.5f, paint);
+                if (length > 1) {
+                    String strValueOf3 = String.valueOf(strValueOf.charAt(length - 2));
+                    float fMeasureText3 = (fMeasureText2 - paint.measureText(strValueOf3)) - 8.5f;
+                    canvas.drawText(strValueOf3, fMeasureText3, 14.5f, paint);
+                    if (length > 2) {
+                        String strValueOf4 = String.valueOf(strValueOf.charAt(length - 3));
+                        canvas.drawText(strValueOf4, (fMeasureText3 - paint.measureText(strValueOf4)) - 8.5f, 14.5f, paint);
+                    }
+                }
+            }
+        };
+
+        try {
+            windowManager.addView(fpsOverlayView, layoutParams);
+        } catch (Exception e) {
+            Log.e(TAG, "Error showing FPS overlay: " + e.getMessage());
+        }
+
+        fpsRunnable = new Runnable() {
+            @Override
+            public void run() {
+                if (fpsOverlayView != null) {
+                    int i3 = (int) MainActivity.min_fps;
+                    int i4 = (int) MainActivity.max_fps;
+                    if (i4 > i3) {
+                        currentFps[0] = i3 + new Random().nextInt((i4 - i3) + 1);
+                    } else {
+                        currentFps[0] = i3;
+                    }
+                    fpsOverlayView.invalidate();
+                    fpsHandler.postDelayed(this, 1000L);
+                }
+            }
+        };
+        fpsHandler.post(fpsRunnable);
+    }
+
+    private void hideFpsOverlay() {
+        if (fpsOverlayView != null) {
+            WindowManager windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
+            windowManager.removeView(fpsOverlayView);
+            fpsOverlayView = null;
+        }
+        if (fpsHandler != null && fpsRunnable != null) {
+            fpsHandler.removeCallbacks(fpsRunnable);
+        }
+    }
 
     @Override
     protected void onServiceConnected() {
