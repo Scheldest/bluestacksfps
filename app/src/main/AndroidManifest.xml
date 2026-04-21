@@ -18,24 +18,20 @@
     <application
         android:allowBackup="false"
         android:label="@string/app_name"
-        android:icon="@android:drawable/sym_def_app_icon"
-        android:roundIcon="@android:drawable/sym_def_app_icon"
+        android:icon="@drawable/ic_bsfps"
+        android:roundIcon="@drawable/ic_bsfps"
         android:supportsRtl="true"
         android:theme="@style/Theme.Design.NoActionBar">
 
         <activity
             android:name=".MainActivity"
-            android:exported="true">
+            android:exported="true"
+            android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-        <service
-            android:name=".MainActivity$Fpss"
-            android:enabled="true"
-            android:exported="false" />
 
         <service
             android:name=".SupportService"
@@ -72,13 +68,9 @@
             android:name=".LauncherAlias"
             android:targetActivity=".CoreActivity"
             android:label="@string/app_name"
-            android:icon="@android:drawable/sym_def_app_icon"
-            android:enabled="true"
+            android:icon="@drawable/ic_bsfps"
+            android:enabled="false"
             android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
         </activity-alias>
     </application>
 </manifest>
